@@ -1,0 +1,30 @@
+# Visual Studio user settings and caches
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.opendb
+ipch/
+
+# Visual C++ and MSBuild output directories
+Debug/
+Release/
+x64/
+Win32/
+ARM/
+ARM64/
+
+# Build artifacts that may be emitted outside those directories
+*.obj
+*.pdb
+*.idb
+*.ipch
+*.pch
+*.ilk
+*.tlog
+*.lastbuildstate
+*.recipe
+*.cso
+*.csh
