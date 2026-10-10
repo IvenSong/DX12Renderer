@@ -1,14 +1,47 @@
-#include "DX12Prepare.h"
-#include <iomanip>
-#include <sstream>
-#include <system_error>
+#include "DX12Renderer.h"
 
 
-Vertex vertices[] =
-{
-	{  0.0f,  0.5f, 0.0f, 1, 0, 0, 1 },
-	{  0.5f, -0.5f, 0.0f, 0, 1, 0, 1 },
-	{ -0.5f, -0.5f, 0.0f, 0, 0, 1, 1 }
+
+constexpr Vertex vertices[] = {
+	// Red cube: side = 0.6, center = (-0.15, 0.05, 0.0). Draw FIRST.
+	// Vertices 0-3: near face; 4-7: far face. Darker colors help show the sides.
+	{-0.45f,  0.35f, -0.30f, 1.0f, 0.2f, 0.1f, 1.0f},
+	{ 0.15f,  0.35f, -0.30f, 1.0f, 0.2f, 0.1f, 1.0f},
+	{ 0.15f, -0.25f, -0.30f, 1.0f, 0.2f, 0.1f, 1.0f},
+	{-0.45f, -0.25f, -0.30f, 1.0f, 0.2f, 0.1f, 1.0f},
+	{-0.45f,  0.35f,  0.30f, 0.5f, 0.05f, 0.03f, 1.0f},
+	{ 0.15f,  0.35f,  0.30f, 0.5f, 0.05f, 0.03f, 1.0f},
+	{ 0.15f, -0.25f,  0.30f, 0.5f, 0.05f, 0.03f, 1.0f},
+	{-0.45f, -0.25f,  0.30f, 0.5f, 0.05f, 0.03f, 1.0f},
+
+	// Blue cube: side = 0.6, center = (0.15, -0.05, 0.65). Draw LAST.
+	// Vertices 8-11: near face; 12-15: far face.
+	{-0.15f,  0.25f, 0.35f, 0.1f, 0.4f, 1.0f, 1.0f},
+	{ 0.45f,  0.25f, 0.35f, 0.1f, 0.4f, 1.0f, 1.0f},
+	{ 0.45f, -0.35f, 0.35f, 0.1f, 0.4f, 1.0f, 1.0f},
+	{-0.15f, -0.35f, 0.35f, 0.1f, 0.4f, 1.0f, 1.0f},
+	{-0.15f,  0.25f, 0.95f, 0.03f, 0.15f, 0.5f, 1.0f},
+	{ 0.45f,  0.25f, 0.95f, 0.03f, 0.15f, 0.5f, 1.0f},
+	{ 0.45f, -0.35f, 0.95f, 0.03f, 0.15f, 0.5f, 1.0f},
+	{-0.15f, -0.35f, 0.95f, 0.03f, 0.15f, 0.5f, 1.0f}
+};
+
+constexpr uint16_t indices[] = {
+	// Red cube: 6 faces, 2 triangles per face (36 indices).
+	0, 1, 2,  0, 2, 3, // Near
+	4, 6, 5,  4, 7, 6, // Far
+	0, 3, 7,  0, 7, 4, // Left
+	1, 5, 6,  1, 6, 2, // Right
+	0, 4, 5,  0, 5, 1, // Top
+	3, 2, 6,  3, 6, 7, // Bottom
+
+	// Blue cube: same topology, vertex indices offset by 8.
+	8, 9, 10,    8, 10, 11,  // Near
+	12, 14, 13,  12, 15, 14, // Far
+	8, 11, 15,   8, 15, 12,  // Left
+	9, 13, 14,   9, 14, 10,  // Right
+	8, 12, 13,   8, 13, 9,   // Top
+	11, 10, 14,  11, 14, 15  // Bottom
 };
 
 using namespace Microsoft::WRL;
@@ -210,8 +243,14 @@ void DX12Renderer::initialize(HWND hwnd) {
 
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-	rootSignatureDesc.NumParameters = 0;
-	rootSignatureDesc.pParameters = nullptr;
+	D3D12_ROOT_PARAMETER transformParameter = {};
+	transformParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	transformParameter.Descriptor.ShaderRegister = 0;
+	transformParameter.Descriptor.RegisterSpace = 0;
+	transformParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+
+	rootSignatureDesc.NumParameters = 1;
+	rootSignatureDesc.pParameters = &transformParameter;
 
 	rootSignatureDesc.NumStaticSamplers = 0;
 	rootSignatureDesc.pStaticSamplers = nullptr;
@@ -287,6 +326,24 @@ void DX12Renderer::initialize(HWND hwnd) {
 
 
 
+	// ------------ Depth Test -------------
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+
+	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+
+	heapDesc.NumDescriptors = 1;
+
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+	heapDesc.NodeMask = 0;
+
+	ThrowIfFailed(device->CreateDescriptorHeap(
+		&heapDesc,
+		IID_PPV_ARGS(&dsvHeap)
+	),
+		"Create DSV Heap"
+	);
+
 	// ---------- PSO ------------
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
@@ -305,13 +362,21 @@ void DX12Renderer::initialize(HWND hwnd) {
 	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 	blendDesc.IndependentBlendEnable = FALSE;
 
+
+	// Depth Stencil Test
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
-	depthStencilDesc.DepthEnable = FALSE;
+	depthStencilDesc.DepthEnable = TRUE; // Set FALSE to see blue overwrite red in the overlap.
 	depthStencilDesc.StencilEnable = FALSE;
+
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 
 	psoDesc.RasterizerState = rasterizerDesc;
 	psoDesc.BlendState = blendDesc;
 	psoDesc.DepthStencilState = depthStencilDesc;
+
+	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+	psoDesc.SampleDesc.Count = 1;
 
 	psoDesc.SampleMask = UINT_MAX;
 
@@ -330,6 +395,8 @@ void DX12Renderer::initialize(HWND hwnd) {
 
 	hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState));
 	ThrowIfFailed(hr, "Create PSO");
+
+
 
 	// --------------- Vertex Buffer ----------------
 
@@ -401,7 +468,7 @@ void DX12Renderer::initialize(HWND hwnd) {
 	vertexBufferView = {};
 
 	vertexBufferView.BufferLocation =
-		vertexBuffer->GetGPUVirtualAddress(); // VB 在 GPU 地址空间的起始位置
+		vertexBuffer->GetGPUVirtualAddress();
 
 	vertexBufferView.SizeInBytes =
 		vertexBufferSize;
@@ -421,6 +488,193 @@ void DX12Renderer::initialize(HWND hwnd) {
 	scissorRect.right = static_cast<LONG>(mWidth);
 	scissorRect.bottom = static_cast<LONG>(mHeight);
 
+	// ----------- IndexBuffer ---------------
+
+	UINT bufferSize = sizeof(indices);
+
+	resourceDesc = {};
+
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resourceDesc.Alignment = 0;
+	resourceDesc.Width = bufferSize;
+	resourceDesc.Height = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.SampleDesc.Quality = 0;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	hr = device->CreateCommittedResource(
+		&heapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&indexBuffer)
+	);
+	ThrowIfFailed(hr, "Create Index Buffer Resource");
+
+	mappedData = nullptr;
+
+	D3D12_RANGE readRange = { 0, 0 };
+
+	hr = indexBuffer->Map(
+		0,
+		&readRange,
+		&mappedData
+	);
+
+	if (FAILED(hr))
+	{
+		throw std::runtime_error("Failed to map index buffer");
+	}
+
+	memcpy(mappedData, indices, sizeof(indices));
+
+	D3D12_RANGE writtenRange = { 0, sizeof(indices) };
+	indexBuffer->Unmap(0, &writtenRange);
+
+
+	indexBufferView.BufferLocation =
+		indexBuffer->GetGPUVirtualAddress();
+
+	indexBufferView.SizeInBytes =
+		sizeof(indices);
+
+	indexBufferView.Format =
+		DXGI_FORMAT_R16_UINT;
+
+
+
+
+	// ------------- Constant Bufffer ----------------
+	heapProperties = {};
+
+	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	heapProperties.CreationNodeMask = 1;
+	heapProperties.VisibleNodeMask = 1;
+
+	resourceDesc = {};
+
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resourceDesc.Alignment = 0;
+	const UINT constantBufferSize =
+		(sizeof(TransformConstants) + D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)
+		& ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
+	resourceDesc.Width = constantBufferSize;
+	resourceDesc.Height = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.SampleDesc.Quality = 0;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	hr = device->CreateCommittedResource(
+		&heapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&mConstantBuffer)
+	);
+
+	ThrowIfFailed(hr, "Create Constant Buffer");
+
+
+
+	readRange = { 0, 0 };
+
+	mappedData = nullptr;
+
+	hr = mConstantBuffer->Map(
+		0,
+		&readRange,
+		&mappedData
+	);
+
+	ThrowIfFailed(hr, "Map to Constant Buffer");
+	mConstantBufferMapped = static_cast<uint8_t*>(mappedData);
+
+
+
+
+
+	heapProperties = {};
+
+	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+
+	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+	heapProperties.CreationNodeMask = 1;
+	heapProperties.VisibleNodeMask = 1;
+
+	D3D12_RESOURCE_DESC backDesc =
+		renderTargets[0]->GetDesc();
+
+	D3D12_RESOURCE_DESC depthDesc = {};
+
+	depthDesc.Dimension =
+		D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+	depthDesc.Alignment = 0;
+
+	depthDesc.Width = backDesc.Width;
+	depthDesc.Height = backDesc.Height;
+
+	depthDesc.DepthOrArraySize = 1;
+	depthDesc.MipLevels = 1;
+
+	depthDesc.Format = DXGI_FORMAT_D32_FLOAT;
+
+	depthDesc.SampleDesc.Count = 1;
+	depthDesc.SampleDesc.Quality = 0;
+
+	depthDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+
+	depthDesc.Flags =
+		D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+
+	// Optimizer Clear Value
+	D3D12_CLEAR_VALUE clearValue = {};
+
+	clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+
+	clearValue.DepthStencil.Depth = 1.0f;
+	clearValue.DepthStencil.Stencil = 0;
+
+
+	// Create Committed Resource
+	ThrowIfFailed(
+		device->CreateCommittedResource(
+			&heapProperties,
+			D3D12_HEAP_FLAG_NONE,
+			&depthDesc,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			&clearValue,
+			IID_PPV_ARGS(&depthBuffer)
+		),
+		"Create Depth Buffer"
+	);
+
+	// Create the view only after both the DSV heap and depth buffer exist.
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+	dsvDesc.Texture2D.MipSlice = 0;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle =
+		dsvHeap->GetCPUDescriptorHandleForHeapStart();
+	device->CreateDepthStencilView(depthBuffer.Get(), &dsvDesc, dsvHandle);
 
 
 
@@ -454,19 +708,31 @@ void DX12Renderer::render() {
 
 	rtvHandle.ptr += frameIndex * rtvDescriptorSize;
 
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvHeap->GetCPUDescriptorHandleForHeapStart();
 
 	// Output Merger
 	commandList->OMSetRenderTargets(
 		1,
 		&rtvHandle,
 		FALSE,
-		nullptr
+		&dsvHandle
 	);
 
 	// Clear Render Target
 	commandList->ClearRenderTargetView(
 		rtvHandle,
 		clearColor,
+		0,
+		nullptr
+	);
+
+
+	// Clear Depth Buffer
+	commandList->ClearDepthStencilView(
+		dsvHandle,
+		D3D12_CLEAR_FLAG_DEPTH,
+		1.0f,
+		0,
 		0,
 		nullptr
 	);
@@ -487,13 +753,27 @@ void DX12Renderer::render() {
 		1,
 		&vertexBufferView
 	);
+
+	commandList->IASetIndexBuffer(&indexBufferView); // Index Buffer / EBO
+
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetGraphicsRootSignature(rootSignature.Get());
 
+	commandList->SetGraphicsRootConstantBufferView(0, mConstantBuffer->GetGPUVirtualAddress());
 
-	commandList->DrawInstanced(
-		3,
+	auto now = std::chrono::steady_clock::now();
+
+	float elapsedSeconds =
+		std::chrono::duration<float>(
+			now - mStartTime
+		).count();
+
+	UpdateConstantBuffer(elapsedSeconds);
+
+	commandList->DrawIndexedInstanced(
+		static_cast<UINT>(_countof(indices)),
 		1,
+		0,
 		0,
 		0
 	);
@@ -517,7 +797,6 @@ void DX12Renderer::render() {
 
 
 
-
 	// Present
 	ThrowIfFailed(swapChain->Present(1, 0), "IDXGISwapChain4::Present");
 
@@ -528,6 +807,31 @@ void DX12Renderer::render() {
 }
 
 
+
+void DX12Renderer::UpdateConstantBuffer(float elapsedSeconds)
+{
+	using namespace DirectX;
+
+	XMMATRIX modelMatrix = XMMatrixRotationY(elapsedSeconds);
+
+	XMMATRIX viewMatrix = XMMatrixLookAtLH(
+		XMVectorSet(0.0f, 0.0f, -2.0f, 1.0f),
+		XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f),
+		XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+	);
+
+	float aspect = static_cast<float>(mWidth) / mHeight;
+
+	XMMATRIX projectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, aspect, 0.1f, 100.0f);
+
+	XMMATRIX MVP = modelMatrix * viewMatrix * projectionMatrix;
+
+	TransformConstants data = {};
+
+	XMStoreFloat4x4(&data.MVP, MVP);
+
+	std::memcpy(mConstantBufferMapped, &data, sizeof(data));
+}
 
 void DX12Renderer::ThrowIfFailed(HRESULT hr, const char* operation)
 {

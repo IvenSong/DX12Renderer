@@ -1,3 +1,8 @@
+cbuffer TransformConstants : register(b0)
+{
+    row_major float4x4 MVP;
+};
+
 struct VSInput {
 	float3 position : POSITION;
 	float3 color : COLOR;
@@ -13,7 +18,7 @@ PSInput VSMain(VSInput input)
 {
     PSInput output;
 
-    output.position = float4(input.position, 1.0f);
+    output.position = mul(float4(input.position, 1.0f), MVP);
     output.color = input.color;
 
     return output;

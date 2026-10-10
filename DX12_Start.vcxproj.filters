@@ -18,7 +18,7 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="DX12Prepare.cpp">
+    <ClCompile Include="DX12Renderer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="shaders.cpp">
@@ -26,14 +26,17 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DX12Prepare.h">
-      <Filter>源文件</Filter>
+    <ClInclude Include="base.h">
+      <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="shaders.h">
       <Filter>源文件</Filter>
     </ClInclude>
-    <ClInclude Include="dataStructure.h">
-      <Filter>源文件</Filter>
+    <ClInclude Include="MathLib\mathLib.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12Renderer.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

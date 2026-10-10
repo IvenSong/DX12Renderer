@@ -1,7 +1,4 @@
-#include <windows.h>
-#include "DX12Prepare.h"
-#include <iostream>
-#include <system_error>
+#include "DX12Renderer.h"
 
 
 #pragma comment(linker, "/subsystem:console /entry:wWinMainCRTStartup")

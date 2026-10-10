@@ -1,15 +1,6 @@
 #pragma once
-#include <d3d12.h>
-#include <dxgi1_6.h>
-#include <d3dcompiler.h>
-#include <wrl.h>
-#include <exception>
-#include <stdexcept>
-#include "dataStructure.h"
+#include "base.h"
 
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "d3dcompiler.lib")
 
 
 class DX12Renderer {
@@ -25,6 +16,8 @@ public:
 
 
 private:
+	void UpdateConstantBuffer(float elapsedSeconds);
+
 	void ThrowIfFailed(HRESULT hr, const char* operation);
 
 	void waitForGPU();
@@ -58,10 +51,26 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
 
+	D3D12_INDEX_BUFFER_VIEW indexBufferView = {};
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
+
+
+	// Constant buffer
+	Microsoft::WRL::ComPtr<ID3D12Resource> mConstantBuffer;
+	uint8_t* mConstantBufferMapped = nullptr;
+
+	// Time
+	std::chrono::steady_clock::time_point mStartTime = std::chrono::steady_clock::now();
+
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
 
 	D3D12_VIEWPORT viewport{};
 	D3D12_RECT scissorRect{};
+
+
+	// Depth Test
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthBuffer;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap;
 
 
 	UINT mWidth = 0;
