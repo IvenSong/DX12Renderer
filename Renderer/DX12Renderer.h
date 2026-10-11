@@ -20,8 +20,10 @@ private:
 	void initializeDepthBuffer();
 	void initializeCameraAndViewport();
 	void initializePipeline();
+		// Buffers Initialization
 	void initializeGeometry();
 	void initializeConstantBuffer();
+	void initializeLightBuffer();
 	void initializeTexture();
 
 	// Pipeline preparation: sampler belongs to the root signature; input layout belongs to the PSO.
@@ -48,9 +50,12 @@ private:
 	void finishInitializationUpload();
 
 	// Per-frame work, synchronization, and error reporting.
+	void UpdateLightBuffer();
 	void UpdateConstantBuffer(float elapsedSeconds);
 	void waitForGPU();
 	void ThrowIfFailed(HRESULT hr, const char* operation);
+
+
 
 private:
 	// Device and adapter.
@@ -104,4 +109,8 @@ private:
 	static constexpr UINT TextureBytesPerPixel = 4;
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> shaderResourceDescriptorHeap;
+
+	// Lighting System
+	Microsoft::WRL::ComPtr<ID3D12Resource> mLightBuffer;
+	uint8_t* mLightBufferMapped = nullptr;  // keep the address for CPU to write in.
 };

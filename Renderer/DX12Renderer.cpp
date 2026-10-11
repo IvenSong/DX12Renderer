@@ -1,49 +1,50 @@
 #include "DX12Renderer.h"
 
+Vertex vertices[] = {
+	// Front (-Z)
+	{{-.5f,-.5f,-.5f}, {1,1,1,1}, {0,1}, { 0, 0,-1}},
+	{{-.5f, .5f,-.5f}, {1,1,1,1}, {0,0}, { 0, 0,-1}},
+	{{ .5f, .5f,-.5f}, {1,1,1,1}, {1,0}, { 0, 0,-1}},
+	{{ .5f,-.5f,-.5f}, {1,1,1,1}, {1,1}, { 0, 0,-1}},
 
+	// Back (+Z)
+	{{-.5f,-.5f, .5f}, {1,1,1,1}, {0,1}, { 0, 0, 1}},
+	{{ .5f,-.5f, .5f}, {1,1,1,1}, {1,1}, { 0, 0, 1}},
+	{{ .5f, .5f, .5f}, {1,1,1,1}, {1,0}, { 0, 0, 1}},
+	{{-.5f, .5f, .5f}, {1,1,1,1}, {0,0}, { 0, 0, 1}},
 
-constexpr Vertex vertices[] = {
-	// Vertex data: position (XMFLOAT3), color (XMFLOAT4), UV (XMFLOAT2).
-	// Cube 1 uses standard UVs; cube 2 flips V to compare the data directly.
-	// Red cube: side = 0.6, center = (-0.15, 0.05, 0.0). Draw FIRST.
-	// Vertices 0-3: near face; 4-7: far face. Darker colors help show the sides.
-	{ {-0.45f, 0.35f, -0.30f}, {1.0f, 0.2f, 0.1f, 1.0f}, {0.0f, 0.0f} },
-	{ {0.15f, 0.35f, -0.30f}, {1.0f, 0.2f, 0.1f, 1.0f}, {1.0f, 0.0f} },
-	{ {0.15f, -0.25f, -0.30f}, {1.0f, 0.2f, 0.1f, 1.0f}, {1.0f, 1.0f} },
-	{ {-0.45f, -0.25f, -0.30f}, {1.0f, 0.2f, 0.1f, 1.0f}, {0.0f, 1.0f} },
-	{ {-0.45f, 0.35f, 0.30f}, {0.5f, 0.05f, 0.03f, 1.0f}, {0.0f, 0.0f} },
-	{ {0.15f, 0.35f, 0.30f}, {0.5f, 0.05f, 0.03f, 1.0f}, {1.0f, 0.0f} },
-	{ {0.15f, -0.25f, 0.30f}, {0.5f, 0.05f, 0.03f, 1.0f}, {1.0f, 1.0f} },
-	{ {-0.45f, -0.25f, 0.30f}, {0.5f, 0.05f, 0.03f, 1.0f}, {0.0f, 1.0f} },
+	// Left (-X)
+	{{-.5f,-.5f, .5f}, {1,1,1,1}, {0,1}, {-1, 0, 0}},
+	{{-.5f, .5f, .5f}, {1,1,1,1}, {0,0}, {-1, 0, 0}},
+	{{-.5f, .5f,-.5f}, {1,1,1,1}, {1,0}, {-1, 0, 0}},
+	{{-.5f,-.5f,-.5f}, {1,1,1,1}, {1,1}, {-1, 0, 0}},
 
-	// Blue cube: side = 0.6, center = (0.15, -0.05, 0.65). Draw LAST.
-	// Vertices 8-11: near face; 12-15: far face.
-	{ {-0.15f, 0.25f, 0.35f}, {0.1f, 0.4f, 1.0f, 1.0f}, {0.0f, 1.0f} },
-	{ {0.45f, 0.25f, 0.35f}, {0.1f, 0.4f, 1.0f, 1.0f}, {1.0f, 1.0f} },
-	{ {0.45f, -0.35f, 0.35f}, {0.1f, 0.4f, 1.0f, 1.0f}, {1.0f, 0.0f} },
-	{ {-0.15f, -0.35f, 0.35f}, {0.1f, 0.4f, 1.0f, 1.0f}, {0.0f, 0.0f} },
-	{ {-0.15f, 0.25f, 0.95f}, {0.03f, 0.15f, 0.5f, 1.0f}, {0.0f, 1.0f} },
-	{ {0.45f, 0.25f, 0.95f}, {0.03f, 0.15f, 0.5f, 1.0f}, {1.0f, 1.0f} },
-	{ {0.45f, -0.35f, 0.95f}, {0.03f, 0.15f, 0.5f, 1.0f}, {1.0f, 0.0f} },
-	{ {-0.15f, -0.35f, 0.95f}, {0.03f, 0.15f, 0.5f, 1.0f}, {0.0f, 0.0f} }
+	// Right (+X)
+	{{ .5f,-.5f,-.5f}, {1,1,1,1}, {0,1}, { 1, 0, 0}},
+	{{ .5f, .5f,-.5f}, {1,1,1,1}, {0,0}, { 1, 0, 0}},
+	{{ .5f, .5f, .5f}, {1,1,1,1}, {1,0}, { 1, 0, 0}},
+	{{ .5f,-.5f, .5f}, {1,1,1,1}, {1,1}, { 1, 0, 0}},
+
+	// Top (+Y)
+	{{-.5f, .5f,-.5f}, {1,1,1,1}, {0,1}, { 0, 1, 0}},
+	{{-.5f, .5f, .5f}, {1,1,1,1}, {0,0}, { 0, 1, 0}},
+	{{ .5f, .5f, .5f}, {1,1,1,1}, {1,0}, { 0, 1, 0}},
+	{{ .5f, .5f,-.5f}, {1,1,1,1}, {1,1}, { 0, 1, 0}},
+
+	// Bottom (-Y)
+	{{-.5f,-.5f, .5f}, {1,1,1,1}, {0,1}, { 0,-1, 0}},
+	{{-.5f,-.5f,-.5f}, {1,1,1,1}, {0,0}, { 0,-1, 0}},
+	{{ .5f,-.5f,-.5f}, {1,1,1,1}, {1,0}, { 0,-1, 0}},
+	{{ .5f,-.5f, .5f}, {1,1,1,1}, {1,1}, { 0,-1, 0}}
 };
 
-constexpr uint16_t indices[] = {
-	// Red cube: 6 faces, 2 triangles per face (36 indices).
-	0, 1, 2,  0, 2, 3, // Near
-	4, 6, 5,  4, 7, 6, // Far
-	0, 3, 7,  0, 7, 4, // Left
-	1, 5, 6,  1, 6, 2, // Right
-	0, 4, 5,  0, 5, 1, // Top
-	3, 2, 6,  3, 6, 7, // Bottom
-
-	// Blue cube: same topology, vertex indices offset by 8.
-	8, 9, 10,    8, 10, 11,  // Near
-	12, 14, 13,  12, 15, 14, // Far
-	8, 11, 15,   8, 15, 12,  // Left
-	9, 13, 14,   9, 14, 10,  // Right
-	8, 12, 13,   8, 13, 9,   // Top
-	11, 10, 14,  11, 14, 15  // Bottom
+uint16_t indices[] = {
+	 0,  1,  2,   0,  2,  3,
+	 4,  5,  6,   4,  6,  7,
+	 8,  9, 10,   8, 10, 11,
+	12, 13, 14,  12, 14, 15,
+	16, 17, 18,  16, 18, 19,
+	20, 21, 22,  20, 22, 23
 };
 
 using namespace Microsoft::WRL;
@@ -77,6 +78,7 @@ void DX12Renderer::initialize(HWND hwnd)
 	// 4. Scene data and per-frame constants.
 	initializeGeometry();
 	initializeConstantBuffer();
+	initializeLightBuffer();
 
 	// 5. Texture data, upload commands, and shader view.
 	initializeTexture();
@@ -434,7 +436,7 @@ void DX12Renderer::createRootSignature()
 
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-	D3D12_ROOT_PARAMETER transformParameter[2] = {};
+	D3D12_ROOT_PARAMETER transformParameter[3] = {};
 	transformParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	transformParameter[0].Descriptor.ShaderRegister = 0;
 	transformParameter[0].Descriptor.RegisterSpace = 0;
@@ -463,7 +465,17 @@ void DX12Renderer::createRootSignature()
 	transformParameter[1].ShaderVisibility =
 		D3D12_SHADER_VISIBILITY_PIXEL;
 
-	rootSignatureDesc.NumParameters = 2;
+	// Root Parameter 2: LightConstant -> b1, pixel shader.
+	transformParameter[2].ParameterType =
+		D3D12_ROOT_PARAMETER_TYPE_CBV;
+
+	transformParameter[2].Descriptor.ShaderRegister = 1;
+	transformParameter[2].Descriptor.RegisterSpace = 0;
+
+	transformParameter[2].ShaderVisibility =
+		D3D12_SHADER_VISIBILITY_PIXEL;
+
+	rootSignatureDesc.NumParameters = _countof(transformParameter);
 	rootSignatureDesc.pParameters = transformParameter;
 
 	rootSignatureDesc.NumStaticSamplers = 1;
@@ -552,6 +564,16 @@ void DX12Renderer::createPipelineState()
 			DXGI_FORMAT_R32G32_FLOAT,
 			0,
 			static_cast<UINT>(offsetof(Vertex, uv)),
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+			0
+		},
+
+		{
+			"NORMAL",
+			0,
+			DXGI_FORMAT_R32G32B32_FLOAT,
+			0,
+			static_cast<UINT>(offsetof(Vertex, normal)),
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
 			0
 		}
@@ -938,6 +960,9 @@ void DX12Renderer::render() {
 	mCamera->update();
 
 	UpdateConstantBuffer(elapsedSeconds);
+	UpdateLightBuffer();
+
+	commandList->SetGraphicsRootConstantBufferView(2, mLightBuffer->GetGPUVirtualAddress());
 
 	commandList->DrawIndexedInstanced(
 		static_cast<UINT>(_countof(indices)),
@@ -979,6 +1004,22 @@ void DX12Renderer::render() {
 
 
 
+void DX12Renderer::UpdateLightBuffer()
+{
+	LightConstant data = {};
+
+	data.lightDirection = { -1.0f, -1.0f, -1.0f };
+
+	data.diffuseIntensity = 0.8f;
+	data.ambientIntensity = 0.7f;
+
+	std::memcpy(
+		mLightBufferMapped,
+		&data,
+		sizeof(data)
+	);
+}
+
 void DX12Renderer::UpdateConstantBuffer(float elapsedSeconds)
 {
 	using namespace DirectX;
@@ -1016,6 +1057,25 @@ void DX12Renderer::ThrowIfFailed(HRESULT hr, const char* operation)
 		}
 		throw std::runtime_error(message.str());
 	}
+}
+
+void DX12Renderer::initializeLightBuffer() {
+	static_assert(sizeof(LightConstant) == 32, "LightConstant must match the HLSL layout");
+
+	constexpr UINT alignment = D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT;
+
+	const UINT bufferSize = (static_cast<UINT>(sizeof(LightConstant)) + alignment - 1) & ~(alignment - 1);
+
+	mLightBuffer = createUploadBuffer(bufferSize);
+
+	D3D12_RANGE readRange = { 0 ,0 };
+	void* mappedData = nullptr;
+
+	ThrowIfFailed(mLightBuffer->Map(0, &readRange, &mappedData), "Map Light Buffer");
+
+	mLightBufferMapped = static_cast<uint8_t*>(mappedData);
+
+	UpdateLightBuffer();
 }
 
 void DX12Renderer::waitForGPU() {

@@ -47,10 +47,18 @@ struct Vertex
     DirectX::XMFLOAT3 position;
     DirectX::XMFLOAT4 color;
     DirectX::XMFLOAT2 uv;
+    DirectX::XMFLOAT3 normal;
 };
-
-
 
 struct TransformConstants {
     DirectX::XMFLOAT4X4 MVP;
+    DirectX::XMFLOAT4X4 Model;
+};
+
+struct LightConstant { // 32 bytes
+    DirectX::XMFLOAT3 lightDirection;
+    float diffuseIntensity;
+
+    DirectX::XMFLOAT3 lightColor;
+    float ambientIntensity;
 };
