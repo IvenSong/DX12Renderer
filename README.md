@@ -50,13 +50,41 @@ flowchart LR
 
 Initialization proceeds from device and commands to render targets and depth, camera and viewport, pipeline, geometry and constant buffers, and finally textures. The static sampler is created with the root signature, and the input layout is defined with the PSO. Setup descriptors stay local to their respective stages.
 
+### Project Structure
+
+```text
+DX12Renderer/
+|-- Application/
+|   |-- main.cpp
+|   |-- camera.cpp
+|   |-- camera.h
+|   |-- inputHandler.h
+|   `-- inputKey.h
+|-- Renderer/
+|   |-- DX12Renderer.cpp
+|   |-- DX12Renderer.h
+|   |-- shaders.cpp
+|   `-- shaders.h
+|-- Common/
+|   `-- base.h
+|-- shader/
+|   `-- shader.hlsl
+|-- DX12_Start.sln
+|-- DX12_Start.vcxproj
+|-- DX12_Start.vcxproj.filters
+|-- README.md
+`-- .gitignore
+```
+
+`Application` contains the entry point, camera, and input handling. `Renderer` contains the DirectX 12 implementation and the existing C++ shader utility placeholders (`shaders.h/.cpp`). `Common` holds shared data definitions, while `shader` contains HLSL source files. The solution and project files stay in the repository root.
+
 | Source | Responsibility |
 | --- | --- |
-| [main.cpp](main.cpp) | Window creation, message loop, and input dispatch |
-| [DX12Renderer.cpp](DX12Renderer.cpp) / [DX12Renderer.h](DX12Renderer.h) | Initialization stages, GPU resources, draw submission, and fence synchronization |
-| [camera.cpp](camera.cpp) / [camera.h](camera.h) | Camera movement, mouse look, and view/projection matrices |
-| [base.h](base.h) | Vertex and transform constant structures |
-| [shader.hlsl](shader.hlsl) | Vertex transforms, UV interpolation, and pixel output |
+| [main.cpp](Application/main.cpp) | Window creation, message loop, and input dispatch |
+| [DX12Renderer.cpp](Renderer/DX12Renderer.cpp) / [DX12Renderer.h](Renderer/DX12Renderer.h) | Initialization stages, GPU resources, draw submission, and fence synchronization |
+| [camera.cpp](Application/camera.cpp) / [camera.h](Application/camera.h) | Camera movement, mouse look, and view/projection matrices |
+| [base.h](Common/base.h) | Vertex and transform constant structures |
+| [shader.hlsl](shader/shader.hlsl) | Vertex transforms, UV interpolation, and pixel output |
 
 ### Vertex Layout and Constant Data
 
@@ -96,7 +124,7 @@ The project uses DirectX 12, DXGI, D3DCompiler, and DirectXMath from the Windows
 
 1. Open `DX12_Start.sln` in the repository root.
 2. Select `Debug | x64` and set `DX12_Start` as the startup project.
-3. Set **Project Properties → Debugging → Working Directory** to `$(ProjectDir)`.
+3. Use `$(ProjectDir)` as the debugging working directory (already configured in the project).
 4. Build and run with F5 or Ctrl+F5.
 
 Alternatively, run the following from the repository root in a Visual Studio Developer PowerShell:
@@ -106,7 +134,7 @@ msbuild .\DX12_Start.vcxproj /p:Configuration=Debug /p:Platform=x64
 .\x64\Debug\DX12_Start.exe
 ```
 
-HLSL is compiled at startup. The application loads `shader.hlsl` relative to its working directory, so run these commands from the repository root.
+HLSL is compiled at startup. The application loads `shader/shader.hlsl` relative to its working directory, so run these commands from the repository root.
 
 ## Current Scope and Next Steps
 

@@ -70,6 +70,14 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <LocalDebuggerWorkingDirectory>$(ProjectDir)</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -127,21 +135,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="camera.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="DX12Renderer.cpp" />
-    <ClCompile Include="shaders.cpp" />
+    <ClCompile Include="Application\camera.cpp" />
+    <ClCompile Include="Application\main.cpp" />
+    <ClCompile Include="Renderer\DX12Renderer.cpp" />
+    <ClCompile Include="Renderer\shaders.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="base.h" />
-    <ClInclude Include="camera.h" />
-    <ClInclude Include="DX12Renderer.h" />
-    <ClInclude Include="inputHandler.h" />
-    <ClInclude Include="inputKey.h" />
-    <ClInclude Include="shaders.h" />
+    <ClInclude Include="Common\base.h" />
+    <ClInclude Include="Application\camera.h" />
+    <ClInclude Include="Renderer\DX12Renderer.h" />
+    <ClInclude Include="Application\inputHandler.h" />
+    <ClInclude Include="Application\inputKey.h" />
+    <ClInclude Include="Renderer\shaders.h" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shader.hlsl">
+    <FxCompile Include="shader\shader.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </FxCompile>
   </ItemGroup>

@@ -491,7 +491,7 @@ void DX12Renderer::compileShaders()
 
 	// ----------- Compile shaders ------------
 	hr = D3DCompileFromFile(
-		L"shader.hlsl",
+		L"shader/shader.hlsl",
 		nullptr,
 		nullptr,
 		"VSMain",
@@ -505,7 +505,7 @@ void DX12Renderer::compileShaders()
 	ThrowIfFailed(hr, "Compile Vertex Shader");
 
 	hr = D3DCompileFromFile(
-		L"shader.hlsl",
+		L"shader/shader.hlsl",
 		nullptr,
 		nullptr,
 		"PSMain",

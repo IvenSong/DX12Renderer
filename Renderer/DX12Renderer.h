@@ -1,6 +1,6 @@
 #pragma once
-#include "base.h"
-#include "camera.h"
+#include "Common/base.h"
+#include "Application/camera.h"
 
 class DX12Renderer {
 public:
