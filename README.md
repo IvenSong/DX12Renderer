@@ -1,164 +1,118 @@
 # DX12Renderer
 
-使用 C++17、Win32 和 DirectX 12 编写的学习项目，逐步实现渲染初始化、三维几何、深度测试、相机输入和纹理上传。
+**基于 DirectX 12 的三维渲染与 GPU 资源管理个人作品。**
 
-当前场景包含两个绕 Y 轴旋转的立方体。像素着色器把 UV 坐标映射为颜色，用于观察顶点数据经过输入布局、顶点着色器和插值后是否正确传递。
+`C++17` · `DirectX 12` · `HLSL` · `DirectXMath` · `Win32`
 
-## 当前功能
+项目使用原生图形 API 实现交互式三维渲染 Demo，覆盖窗口与输入、渲染管线、几何绘制、深度测试、矩阵变换及纹理上传。实现重点是 CPU/GPU 数据布局的一致性、资源状态与生命周期的显式管理，以及按依赖划分的初始化流程。
 
-- 创建 DXGI 工厂、硬件适配器和 D3D12 设备。
-- 使用双缓冲交换链、RTV 和 DSV 完成绘制及深度测试。
-- 使用顶点缓冲、索引缓冲和 MVP 常量缓冲绘制三维场景。
-- 使用 DirectXMath 的 `XMFLOAT` 类型保存顶点数据，使用 `XMVECTOR` / `XMMATRIX` 进行相机和矩阵计算。
-- 支持 WASD 移动和按住鼠标右键转动视角。
-- 将初始化拆分为阶段函数，并复用上传缓冲的创建和写入流程。
-- 创建 RGBA8 纹理、SRV 和静态采样器，完成纹理复制、资源状态转换及 fence 同步。
+## 项目展示
 
-**当前画面使用 UV 调试颜色，尚未切换为纹理采样。** 默认纹理数据为零，上传流程完成并不意味着已经加载了图片。
+当前场景包含两个随时间绕 Y 轴旋转的立方体，支持自由移动和转动相机。两个立方体分别使用标准 UV 与翻转 V 的 UV，通过像素颜色观察坐标传递和插值结果；深度缓冲处理几何体之间的遮挡。
+
+| 交互 | 效果 |
+| --- | --- |
+| W / S | 沿相机朝向前进 / 后退 |
+| A / D | 横向移动 |
+| 按住鼠标右键并移动 | 调整相机的俯仰与偏航 |
+| 关闭窗口 | 退出程序 |
+
+当前像素输出为 `float4(U, V, 1, 1)`，红色与绿色分别表示 U、V。**已实现纹理资源上传及绑定准备，当前画面使用 UV 调试颜色；图片加载和实际纹理采样尚未启用。**
+
+## 实现亮点
+
+| 能力 | 具体实现 |
+| --- | --- |
+| DirectX 12 绘制链路 | 创建硬件设备、命令队列、双缓冲交换链、根签名和 PSO，通过索引绘制生成三维场景并提交显示 |
+| 深度测试与变换 | 使用 `D32_FLOAT` 深度缓冲和 `LESS` 比较；每帧计算并上传 MVP，完成模型、视图和投影变换 |
+| 相机与输入 | 通过 `InputHandler` 接口接收 Win32 键鼠事件，使用 DirectXMath 更新相机朝向、位置和视图矩阵 |
+| CPU/GPU 数据契约 | 用 `XMFLOAT3 / XMFLOAT4 / XMFLOAT2` 保存顶点，通过 `offsetof` 和 `sizeof` 将字段、输入格式与 HLSL 语义对应 |
+| 纹理上传与资源同步 | 用 `GetCopyableFootprints` 获取复制布局，按行跨度写入 UPLOAD 缓冲，记录纹理复制及状态转换，并用 fence 保证上传资源的生命周期 |
+| 初始化组织与复用 | 将初始化划分为 10 个阶段，统一缓冲创建与写入；使设备、窗口目标、管线、场景数据和纹理准备的职责清晰 |
+| 错误诊断与资源管理 | 检查关键调用的 `HRESULT`，输出操作名称和系统错误信息；使用 `ComPtr` 管理 COM 资源 |
+
+## 核心设计
+
+### 模块关系
+
+```mermaid
+flowchart LR
+    Window["Win32 窗口与消息循环"] --> Input["InputHandler"]
+    Input --> Camera["Camera"]
+    Camera --> Renderer["DX12Renderer"]
+    Geometry["顶点与索引数据"] --> Renderer
+    Renderer --> Pipeline["根签名 / PSO / HLSL"]
+    Renderer --> Resources["缓冲 / 纹理 / 资源视图"]
+    Pipeline --> Draw["DrawIndexedInstanced"]
+    Resources --> Draw
+    Draw --> Present["SwapChain / Present"]
+```
+
+初始化按“设备与命令 → 窗口及深度目标 → 相机与视口 → 管线 → 几何和常量缓冲 → 纹理”执行。采样器与根签名一起创建，输入布局与 PSO 一起创建，描述结构保留在对应阶段的局部作用域。
+
+| 代码入口 | 职责 |
+| --- | --- |
+| [main.cpp](main.cpp) | 窗口创建、消息循环和输入事件分发 |
+| [DX12Renderer.cpp](DX12Renderer.cpp) / [DX12Renderer.h](DX12Renderer.h) | 初始化阶段、GPU 资源、绘制提交与 fence 同步 |
+| [camera.cpp](camera.cpp) / [camera.h](camera.h) | 相机移动、鼠标视角及视图/投影矩阵 |
+| [base.h](base.h) | 顶点与变换常量的数据结构 |
+| [shader.hlsl](shader.hlsl) | 顶点变换、UV 传递和像素输出 |
+
+### 顶点布局与常量传递
+
+| 顶点字段 | CPU 类型 | HLSL 类型 / 语义 | 字节偏移 |
+| --- | --- | --- | --- |
+| `position` | `XMFLOAT3` | `float3 / POSITION` | 0 |
+| `color` | `XMFLOAT4` | `float4 / COLOR` | 12 |
+| `uv` | `XMFLOAT2` | `float2 / TEXCOORD0` | 28 |
+
+顶点步长为 36 字节。输入布局使用 `offsetof(Vertex, ...)`，顶点缓冲视图使用 `sizeof(Vertex)`，让数据结构和输入描述保持一致。
+
+CPU 每帧计算 `MVP = model * view * projection`，写入持续映射、按 256 字节对齐分配的常量缓冲。顶点着色器通过 `b0` 读取 `row_major float4x4 MVP`，并执行 `mul(float4(position, 1), MVP)`。
+
+### 上传资源的生命周期
+
+纹理参数和像素数据集中在 `prepareTextureData()`；创建、录制复制与提交等待由独立函数负责。
+
+```text
+CPU 像素数据 → UPLOAD 缓冲 → CopyTextureRegion → DEFAULT 堆纹理
+                                              ↓
+                            COPY_DEST → PIXEL_SHADER_RESOURCE
+```
+
+上传缓冲由初始化函数持有，在命令列表提交并等待对应 fence 完成后才释放。纹理资源与 SRV 保留供后续绘制使用，避免 GPU 尚未读取源数据时上传缓冲就被销毁。
 
 ## 构建与运行
 
-### 环境
+### 环境要求
 
 - Windows 10 / Windows 11。
-- Visual Studio 2022，安装“使用 C++ 的桌面开发”工作负载。
-- MSVC v143 工具集、Windows 10/11 SDK。
-- 支持 DirectX 12 Feature Level 12_0 的硬件适配器。当前代码跳过软件适配器，没有 WARP 回退路径。
+- Visual Studio 2022，安装“使用 C++ 的桌面开发”、MSVC v143 和 Windows 10/11 SDK。
+- 支持 DirectX 12 Feature Level 12_0 的硬件适配器。
 
-项目使用 Windows SDK 提供的 DirectX 12、DXGI、D3DCompiler 和 DirectXMath，不需要另外下载第三方数学库。
+项目使用 Windows SDK 提供的 DirectX 12、DXGI、D3DCompiler 和 DirectXMath，无需额外的第三方图形框架。
 
-### 使用 Visual Studio
+### 快速启动
 
 1. 打开仓库根目录的 `DX12_Start.sln`。
-2. 选择 `Debug | x64`，并将 `DX12_Start` 设为启动项目。
-3. 确认“项目属性 → 调试 → 工作目录”为 `$(ProjectDir)`。
+2. 选择 `Debug | x64`，将 `DX12_Start` 设为启动项目。
+3. 将“项目属性 → 调试 → 工作目录”设为 `$(ProjectDir)`。
 4. 编译后按 F5 或 Ctrl+F5 运行。
 
-### 使用命令行
-
-在 Visual Studio 的 Developer PowerShell / Developer Command Prompt 中进入仓库根目录：
+也可以在 Visual Studio Developer PowerShell 中进入仓库根目录执行：
 
 ```powershell
 msbuild .\DX12_Start.vcxproj /p:Configuration=Debug /p:Platform=x64
 .\x64\Debug\DX12_Start.exe
 ```
 
-`shader.hlsl` 在程序启动时通过 `D3DCompileFromFile` 编译，工程中将它排除在离线 shader 构建之外。因此运行时的工作目录必须能找到该文件；以上命令应在仓库根目录执行。
+HLSL 在程序启动时编译，运行时需要从工作目录找到 `shader.hlsl`，因此命令应在仓库根目录执行。
 
-## 操作方式
+## 项目范围与后续方向
 
-| 操作 | 功能 |
-| --- | --- |
-| W / S | 沿相机朝向前进 / 后退 |
-| A / D | 向左 / 向右移动 |
-| 按住鼠标右键并移动 | 转动相机视角 |
-| 关闭窗口 | 退出程序 |
+当前版本聚焦基础三维绘制、可交互相机和显式 GPU 资源管理。后续计划包括：
 
-## 代码组织
-
-| 文件 | 职责 |
-| --- | --- |
-| `main.cpp` | 创建 Win32 窗口，处理消息循环，将键盘和鼠标事件交给输入接口 |
-| `DX12Renderer.h` / `DX12Renderer.cpp` | 管理 GPU 资源、初始化阶段、纹理上传、每帧绘制和同步 |
-| `base.h` | 公共依赖、`Vertex` 和 `TransformConstants` 数据结构 |
-| `camera.h` / `camera.cpp` | 相机姿态、移动、视图矩阵和投影矩阵 |
-| `inputHandler.h` / `inputKey.h` | 输入事件接口及按键定义 |
-| `shader.hlsl` | 顶点变换、UV 传递和像素颜色输出 |
-| `shaders.h` / `shaders.cpp` | 预留文件，目前 shader 编译仍在渲染器中完成 |
-| `DX12_Start.sln` / `DX12_Start.vcxproj` / `.filters` | Visual Studio 解决方案、工程和文件分组 |
-
-### 初始化阶段
-
-`initialize(HWND)` 负责按依赖顺序调用以下阶段：
-
-| 顺序 | 函数 | 内容 |
-| --- | --- | --- |
-| 1 | `initializeDevice()` | 创建工厂、选择适配器并创建设备 |
-| 2 | `initializeCommands()` | 创建队列、命令分配器、命令列表、fence 和事件 |
-| 3 | `initializeSwapChain(hwnd)` | 获取客户区尺寸并创建交换链 |
-| 4 | `initializeRenderTargets()` | 创建 RTV 堆，获取并描述后备缓冲 |
-| 5 | `initializeDepthBuffer()` | 创建 DSV 堆、深度资源和深度视图 |
-| 6 | `initializeCameraAndViewport()` | 初始化相机、视口和裁剪区域 |
-| 7 | `initializePipeline()` | 创建根签名、编译 shader、创建 PSO |
-| 8 | `initializeGeometry()` | 创建并填充顶点和索引缓冲 |
-| 9 | `initializeConstantBuffer()` | 创建并持续映射 MVP 常量缓冲 |
-| 10 | `initializeTexture()` | 准备纹理数据、创建纹理及 SRV、执行上传 |
-
-静态采样器归属于根签名的创建流程；输入布局归属于 PSO 的创建流程。`createUploadBuffer()` 与 `writeUploadBuffer()` 统一处理可供 CPU 写入的缓冲。
-
-### 顶点数据与 shader 输入
-
-```cpp
-struct Vertex
-{
-    DirectX::XMFLOAT3 position;
-    DirectX::XMFLOAT4 color;
-    DirectX::XMFLOAT2 uv;
-};
-```
-
-| 字段 | HLSL 类型 / 语义 | 输入格式 | 字节偏移 |
-| --- | --- | --- | --- |
-| `position` | `float3 / POSITION` | `R32G32B32_FLOAT` | 0 |
-| `color` | `float4 / COLOR` | `R32G32B32A32_FLOAT` | 12 |
-| `uv` | `float2 / TEXCOORD0` | `R32G32_FLOAT` | 28 |
-
-当前顶点大小为 36 字节。代码通过 `offsetof(Vertex, ...)` 获取偏移，通过 `sizeof(Vertex)` 设置顶点步长。
-
-第一个立方体使用标准 UV，第二个立方体翻转 V。当前像素着色器输出：
-
-```hlsl
-return float4(input.uv, 1.0f, 1.0f);
-```
-
-即红色由 U 控制，绿色由 V 控制，蓝色和 Alpha 固定为 1。修改 `vertices` 中各顶点最后一组坐标即可测试 UV 的传递。
-
-### 常量与资源绑定
-
-CPU 每帧计算 `MVP = model * view * projection`，写入持续映射的 `TransformConstants`。HLSL 使用 `row_major float4x4 MVP`，并按行向量方式执行 `mul(float4(position, 1), MVP)`。
-
-| 资源 | shader 寄存器 | 根签名位置 |
-| --- | --- | --- |
-| `TransformConstants` / MVP | `b0`，顶点着色器可见 | 根参数 0，root CBV |
-| `diffuseTexture` | `t0`，像素着色器可见 | 根参数 1，SRV 描述符表 |
-| `textureSampler` | `s0`，像素着色器可见 | 静态采样器 |
-
-根参数索引和 shader 寄存器编号是不同概念。当前 shader 中的 `CameraConstants` 尚未使用，也未创建独立的相机常量缓冲；实际变换只使用包含相机矩阵结果的 MVP。`outputTexture` 同样是未使用声明，没有对应的 UAV 输出流程。
-
-### 纹理上传
-
-可修改的数据集中在 `prepareTextureData()`：纹理宽高、CPU 行跨度和 RGBA8 像素数组。目前默认使用窗口客户区尺寸和零填充数据。
-
-上传流程为：
-
-1. 创建处于 `COPY_DEST` 状态的 DEFAULT 堆纹理及其 SRV。
-2. 重置初始化命令列表，进入录制状态。
-3. 用 `GetCopyableFootprints()` 查询布局，并创建 UPLOAD 堆缓冲。
-4. `Map()` 后按目标 `RowPitch` 逐行复制 CPU 数据，再 `Unmap()`。
-5. 记录 `CopyTextureRegion()`，将纹理转换为 `PIXEL_SHADER_RESOURCE`。
-6. 关闭并提交命令列表，在队列上发出 fence 信号，等待 GPU 完成。
-7. 初始化函数返回后，局部上传缓冲自动释放；纹理和 SRV 继续保留用于绘制。
-
-以后测试纹理采样，需要先准备可辨识的像素数据，再让像素着色器使用 `diffuseTexture.Sample(textureSampler, input.uv)`。
-
-## 当前限制
-
-- 纹理流程只处理单层、单 mip 的 RGBA8 二维纹理，没有图片文件加载和 mipmap 生成。
-- 每帧提交后都会等待 GPU，便于学习同步；尚未实现多帧并行的 frame resources。
-- 窗口尺寸改变后尚未重建交换链、深度资源及相机投影。
-- 每个立方体使用 8 个共享顶点，尚未为每个面建立独立的顶点和 UV。
-- 相机移动速度按帧计算，尚未按帧间隔缩放。
-
-## Git 提交范围
-
-仓库保留源码、HLSL、Visual Studio 工程文件、README 和 `.gitignore`。旧的自定义 `MathLib` 已移除，数学运算使用 DirectXMath。
-
-以下内容由 `.gitignore` 排除：
-
-- `.vs/`、IntelliSense 数据库和其他 IDE 缓存。
-- `*.vcxproj.user`、`*.suo` 等个人配置。
-- `Debug/`、`Release/`、`x64/` 等构建输出目录。
-- 可执行文件、对象文件、调试符号、编译后的 shader 和 MSBuild 中间文件。
-- 本地环境变量文件、临时文件和日志。
-
-本项目的 Git 根目录是包含 `DX12_Start.sln` 的文件夹；上级学习目录和其他示例项目不属于此仓库。
+- **纹理显示：**当前仅上传单 mip、零填充的 RGBA8 数据；增加图片加载、实际采样和 mipmap 支持。
+- **帧资源管理：**当前每帧提交后等待 GPU；增加独立帧资源，支持 CPU/GPU 多帧并行。
+- **窗口与输入：**补充窗口尺寸变化时的资源重建，并按帧间隔计算相机移动。
+- **几何与 UV：**为立方体各面建立独立顶点及 UV，扩展模型与材质数据。
