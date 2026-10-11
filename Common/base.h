@@ -52,7 +52,7 @@ struct Vertex
 
 struct TransformConstants {
     DirectX::XMFLOAT4X4 MVP;
-    DirectX::XMFLOAT4X4 Model;
+    DirectX::XMFLOAT4X4 normalMatrix;
 };
 
 struct LightConstant { // 32 bytes

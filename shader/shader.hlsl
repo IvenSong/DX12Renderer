@@ -1,6 +1,7 @@
 cbuffer TransformConstants : register(b0)
 {
     row_major float4x4 MVP;
+    row_major float4x4 normalMatrix;
 };
 
 cbuffer LightBuffer : register(b1)
@@ -44,7 +45,7 @@ PSInput VSMain(VSInput input)
     output.color = input.color;
     output.uv = input.uv;
 
-    output.normal = mul(float4(input.normal, 0.0f), MVP).xyz;
+    output.normal = mul(input.normal, (float3x3)normalMatrix);
 
     return output;
 }
@@ -55,9 +56,9 @@ float4 PSMain(PSInput input) : SV_TARGET
     float3 normal = normalize(input.normal);
     float3 lightDir = normalize(-lightDirection);
 
-    float diffuse = max(dot(normal, lightDir), 0.0f);
+    float3 diffuse = max(dot(normal, lightDir), 0.0f) * diffuseIntensity * lightColor;
 
-    float3 ambient = input.color * ambientIntensity;
+    float3 ambient = input.color.rgb * ambientIntensity;
 
     return float4(ambient + diffuse * input.color.xyz, input.color.a);
 }

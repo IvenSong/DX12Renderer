@@ -2,15 +2,19 @@
 
 A personal 3D rendering project built with **C++17, DirectX 12, HLSL, DirectXMath, and Win32**.
 
+![DirectX 12 cube lighting demo](docs/images/lighting-demo.png)
+
+A rotating cube with per-face normals, ambient lighting, and directional diffuse shading.
+
 ## Implemented Features
 
 - A rotating cube with indexed drawing, depth testing, and per-face normals.
 - A camera supporting keyboard movement and mouse look.
-- MVP transforms with basic ambient and directional diffuse shading.
+- MVP transforms and world-space normals with adjustable ambient and directional diffuse lighting.
 - A dedicated LightBuffer passed to the pixel shader through `b1`.
 - RGBA8 texture creation, upload, SRV binding, and static sampler setup.
 
-Lighting is a work in progress: world-space normal transforms and diffuse light color/intensity controls are pending. Image loading and texture sampling are not enabled.
+Image loading and texture sampling are not enabled yet.
 
 ## Technical Highlights
 
@@ -29,7 +33,7 @@ Requires Windows 10/11, Visual Studio 2022 with **Desktop development with C++**
 
 Keep the debugging working directory set to `$(ProjectDir)` (configured by default). The application compiles `shader/shader.hlsl` at startup.
 
-To adjust light direction and ambient intensity, edit `UpdateLightBuffer()` in [DX12Renderer.cpp](Renderer/DX12Renderer.cpp).
+To adjust light direction, color, and ambient/diffuse intensity, edit `UpdateLightBuffer()` in [DX12Renderer.cpp](Renderer/DX12Renderer.cpp).
 
 | Control | Action |
 | --- | --- |

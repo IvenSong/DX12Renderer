@@ -55,8 +55,6 @@ private:
 	void waitForGPU();
 	void ThrowIfFailed(HRESULT hr, const char* operation);
 
-
-
 private:
 	// Device and adapter.
 	Microsoft::WRL::ComPtr<IDXGIFactory6> factory;

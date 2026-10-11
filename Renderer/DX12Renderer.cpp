@@ -1008,10 +1008,11 @@ void DX12Renderer::UpdateLightBuffer()
 {
 	LightConstant data = {};
 
-	data.lightDirection = { -1.0f, -1.0f, -1.0f };
+	data.lightDirection = { -1.0f, -1.0f, 0.0f };
+	data.lightColor = { 1.0f, 1.0f,1.0f };
 
 	data.diffuseIntensity = 0.8f;
-	data.ambientIntensity = 0.7f;
+	data.ambientIntensity = 0.2f;
 
 	std::memcpy(
 		mLightBufferMapped,
@@ -1034,9 +1035,13 @@ void DX12Renderer::UpdateConstantBuffer(float elapsedSeconds)
 
 	XMMATRIX MVP = modelMatrix * viewMatrix * projectionMatrix;
 
+	XMMATRIX normalMatrix = XMMatrixTranspose(XMMatrixInverse(nullptr, modelMatrix));
+
 	TransformConstants data = {};
 
 	XMStoreFloat4x4(&data.MVP, MVP);
+
+	XMStoreFloat4x4(&data.normalMatrix, normalMatrix);
 
 	std::memcpy(mConstantBufferMapped, &data, sizeof(data));
 }
