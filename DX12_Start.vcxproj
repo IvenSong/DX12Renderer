@@ -127,14 +127,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="camera.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="DX12Renderer.cpp" />
     <ClCompile Include="shaders.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="base.h" />
+    <ClInclude Include="camera.h" />
     <ClInclude Include="DX12Renderer.h" />
-    <ClInclude Include="MathLib\mathLib.h" />
+    <ClInclude Include="inputHandler.h" />
+    <ClInclude Include="inputKey.h" />
     <ClInclude Include="shaders.h" />
   </ItemGroup>
   <ItemGroup>

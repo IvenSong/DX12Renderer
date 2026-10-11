@@ -24,6 +24,9 @@
     <ClCompile Include="shaders.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="camera.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="base.h">
@@ -32,10 +35,16 @@
     <ClInclude Include="shaders.h">
       <Filter>源文件</Filter>
     </ClInclude>
-    <ClInclude Include="MathLib\mathLib.h">
+    <ClInclude Include="DX12Renderer.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="DX12Renderer.h">
+    <ClInclude Include="camera.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="inputHandler.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="inputKey.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

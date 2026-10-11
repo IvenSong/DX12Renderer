@@ -8,6 +8,7 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
+#include <windowsx.h>
 
 // DirectX 12, DXGI, shader compilation, and COM ownership.
 #include <d3d12.h>
@@ -18,6 +19,7 @@
 
 
 // Standard library dependencies used throughout the project.
+#include <algorithm>
 #include <climits>
 #include <cstddef>
 #include <cstdint>
@@ -30,6 +32,7 @@
 #include <stdexcept>
 #include <string>
 #include <system_error>
+#include <vector>
 
 // DirectX link dependencies for the MSVC build.
 #pragma comment(lib, "d3d12.lib")
@@ -38,17 +41,12 @@
 
 
 
-#include ".\MathLib\mathLib.h"
-
-
-
-
-
 
 struct Vertex
 {
-    float x, y, z;
-    float r, g, b, a;
+    DirectX::XMFLOAT3 position;
+    DirectX::XMFLOAT4 color;
+    DirectX::XMFLOAT2 uv;
 };
 
 

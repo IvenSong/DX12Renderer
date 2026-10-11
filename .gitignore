@@ -6,6 +6,8 @@
 *.sln.docstates
 *.VC.db
 *.VC.opendb
+*.sdf
+*.opensdf
 ipch/
 
 # Visual C++ and MSBuild output directories
@@ -28,3 +30,19 @@ ARM64/
 *.recipe
 *.cso
 *.csh
+*.exe
+*.dll
+*.lib
+*.exp
+*.iobj
+*.ipdb
+
+# Local environment, logs, and temporary files
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+*.bak
+Thumbs.db
+Desktop.ini

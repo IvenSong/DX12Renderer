@@ -1,4 +1,4 @@
-#include "DX12Renderer.h"
+ï»¿#include "DX12Renderer.h"
 
 
 #pragma comment(linker, "/subsystem:console /entry:wWinMainCRTStartup")
@@ -10,12 +10,49 @@ LRESULT CALLBACK WindowProc(  // Deal with Events
     WPARAM wParam,
     LPARAM lParam)
 {
+    auto* input = reinterpret_cast<InputHandler*>(
+        GetWindowLongPtr(hwnd, GWLP_USERDATA));
+
     switch (message)
     {
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
+
+    case WM_KEYDOWN:
+        if (input)
+            input->onKeyDown(static_cast<uint32_t>(wParam));
+        return 0;
+
+    case WM_KEYUP:
+        if (input)
+            input->onKeyUp(static_cast<uint32_t>(wParam));
+        return 0;
+
+    case WM_RBUTTONDOWN:
+        if (input) {
+            SetCapture(hwnd);
+            input->onRMouseDown(
+                GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        }
+        return 0;
+
+    case WM_RBUTTONUP:
+        if (input) {
+            input->onRMouseUp(
+                GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        }
+        if (GetCapture() == hwnd)
+            ReleaseCapture();
+        return 0;
+
+    case WM_MOUSEMOVE:
+        if (input)
+            input->onMouseMove(
+                GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        return 0;
     }
+
 
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
@@ -27,7 +64,7 @@ int WINAPI wWinMain(
     int nCmdShow)
 {
     try {
-    // 1. ¶¨Òå´°¿ÚÀà
+    // 1. å®šä¹‰çª—å£ç±»
     const wchar_t CLASS_NAME[] = L"DX12WindowClass";
 
     WNDCLASS wc = {};
@@ -36,12 +73,16 @@ int WINAPI wWinMain(
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
 
-    // 2. ×¢²á´°¿ÚÀà
+    //
+
+
+
+    // 2. æ³¨å†Œçª—å£ç±»
     if (RegisterClass(&wc) == 0) {
         throw std::system_error(GetLastError(), std::system_category(), "RegisterClass failed");
     }
 
-    // 3. ´´½¨´°¿Ú
+    // 3. åˆ›å»ºçª—å£
     HWND hwnd = CreateWindowEx(
         0,                          // Extended style
         CLASS_NAME,                 // Window class
@@ -64,14 +105,23 @@ int WINAPI wWinMain(
         throw std::system_error(GetLastError(), std::system_category(), "CreateWindowEx failed");
     }
 
-    // 4. ÏÔÊ¾´°¿Ú
-    ShowWindow(hwnd, nCmdShow);
 
-    // 5. ÏûÏ¢Ñ­»·
+
+
+
+    // message
     MSG msg = {};
 
     DX12Renderer renderer;
     renderer.initialize(hwnd);
+
+    // send message to renderer
+    SetWindowLongPtr(
+        hwnd,
+        GWLP_USERDATA,
+        reinterpret_cast<LONG_PTR>(renderer.inputHandler()));
+
+    ShowWindow(hwnd, nCmdShow);
 
     while (msg.message != WM_QUIT)
     {
@@ -101,5 +151,4 @@ int WINAPI wWinMain(
         return 1;
     }
 }
-
 
