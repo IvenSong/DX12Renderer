@@ -53,12 +53,15 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
+    float3 textureColor = diffuseTexture.Sample(textureSampler, input.uv).rgb;
+    float4 baseColor = float4(input.color.rgb * textureColor, input.color.a);
+    
     float3 normal = normalize(input.normal);
     float3 lightDir = normalize(-lightDirection);
 
     float3 diffuse = max(dot(normal, lightDir), 0.0f) * diffuseIntensity * lightColor;
 
-    float3 ambient = input.color.rgb * ambientIntensity;
+    float3 ambient = baseColor.rgb * ambientIntensity;
 
-    return float4(ambient + diffuse * input.color.xyz, input.color.a);
+    return float4(ambient + diffuse * baseColor.rgb, baseColor.a);
 }

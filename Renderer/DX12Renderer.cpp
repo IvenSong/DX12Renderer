@@ -1,4 +1,6 @@
 #include "DX12Renderer.h"
+#include "Application/image.h"
+#include <utility>
 
 Vertex vertices[] = {
 	// Front (-Z)
@@ -679,13 +681,18 @@ void DX12Renderer::initializeTexture()
 
 DX12Renderer::TextureData DX12Renderer::prepareTextureData() const
 {
-	// Editable data preparation: dimensions and RGBA8 pixels belong here.
-	// Preserve the current window-sized, zero-filled texture as the default.
+	// Change this path to use another image. Loading failures report the path and reason.
+	image loadedImage = image::createImage("assets/textures/house_atlas.png");
+	if (loadedImage.mWidth > D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION
+		|| loadedImage.mHeight > D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION) {
+		throw std::runtime_error("Texture dimensions exceed the DirectX 12 Texture2D limit");
+	}
+
 	TextureData data;
-	data.width = mWidth;
-	data.height = mHeight;
-	data.rowPitch = static_cast<size_t>(data.width) * TextureBytesPerPixel;
-	data.pixels.resize(data.rowPitch * data.height);
+	data.width = loadedImage.mWidth;
+	data.height = loadedImage.mHeight;
+	data.rowPitch = loadedImage.rowPitch();
+	data.pixels = std::move(loadedImage.mData);
 	return data;
 }
 
@@ -946,8 +953,6 @@ void DX12Renderer::render() {
 		shaderResourceDescriptorHeap
 		->GetGPUDescriptorHandleForHeapStart()
 	);
-
-
 
 
 	auto now = std::chrono::steady_clock::now();

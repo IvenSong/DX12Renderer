@@ -13,6 +13,12 @@
     <Filter Include="shader">
       <UniqueIdentifier>{9D02FFAC-38D4-498E-B3C8-A0044392611C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThirdParty">
+      <UniqueIdentifier>{68B21387-7847-4216-8478-4C112804BC99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assets">
+      <UniqueIdentifier>{DA3C8F20-09A0-4AE2-8A29-F740EC71E9BF}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application\main.cpp">
@@ -25,6 +31,9 @@
       <Filter>Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Application\camera.cpp">
+      <Filter>Application</Filter>
+    </ClCompile>
+    <ClCompile Include="Application\image.cpp">
       <Filter>Application</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,6 +50,12 @@
     <ClInclude Include="Application\camera.h">
       <Filter>Application</Filter>
     </ClInclude>
+    <ClInclude Include="Application\image.h">
+      <Filter>Application</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\stb_image.h">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
     <ClInclude Include="Application\inputHandler.h">
       <Filter>Application</Filter>
     </ClInclude>
@@ -52,5 +67,13 @@
     <FxCompile Include="shader\shader.hlsl">
       <Filter>shader</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md">
+      <Filter>Common</Filter>
+    </None>
+    <None Include="assets\textures\house_atlas.png">
+      <Filter>Assets</Filter>
+    </None>
   </ItemGroup>
 </Project>

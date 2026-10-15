@@ -2,9 +2,11 @@
 
 A personal 3D rendering project built with **C++17, DirectX 12, HLSL, DirectXMath, and Win32**.
 
-![DirectX 12 cube lighting demo](docs/images/lighting-demo.png)
+![image-20261015092727750](./assets/image-20261015092727750.png)
 
-A rotating cube with per-face normals, ambient lighting, and directional diffuse shading.
+
+
+A rotating textured cube with per-face normals, ambient lighting, and directional diffuse shading.
 
 ## Implemented Features
 
@@ -13,8 +15,10 @@ A rotating cube with per-face normals, ambient lighting, and directional diffuse
 - MVP transforms and world-space normals with adjustable ambient and directional diffuse lighting.
 - A dedicated LightBuffer passed to the pixel shader through `b1`.
 - RGBA8 texture creation, upload, SRV binding, and static sampler setup.
+- PNG/JPEG image loading through the image system adapted from SoftRenderer and its bundled stb_image v2.30.
+- Pixel shader texture sampling combined with vertex tint and ambient/directional diffuse lighting.
 
-Image loading and texture sampling are not enabled yet.
+The default texture is `assets/textures/house_atlas.png`, copied from SoftRenderer's demo assets.
 
 ## Technical Highlights
 
@@ -32,6 +36,17 @@ Requires Windows 10/11, Visual Studio 2022 with **Desktop development with C++**
 3. Build and run with **F5** or **Ctrl+F5**.
 
 Keep the debugging working directory set to `$(ProjectDir)` (configured by default). The application compiles `shader/shader.hlsl` at startup.
+The build also copies the shader and default texture to the output directory so the executable can run with that directory as its working directory.
+
+## Image Loading
+
+Change the image path in `DX12Renderer::prepareTextureData()` to select a different texture. Paths are relative to the working directory and use UTF-8. If adding a new default asset, update `CopyRuntimeAssets` in the project file as well.
+
+`Application/image.h` provides `image::createImage(path)` and `image::createImageFromMemory(encodedData, byteCount, sourceName)`. The memory overload accepts encoded image bytes, such as the contents of a PNG file; it does not accept an uncompressed pixel array. Both return an image by value whose `mData` vector owns its pixels, so no `destroyImage()` call is needed.
+
+Pixels use tightly packed **R, G, B, A** bytes with the first row at the **top**. Unlike SoftRenderer's GDI framebuffer, no red/blue swap or vertical flip is applied. Image dimensions drive texture allocation, independently of the window size. The upload code handles the GPU's row alignment. Missing or invalid images throw an exception containing the source name and decoding error, instead of silently producing a black texture.
+
+The pixel shader currently uses the image's RGB and preserves vertex alpha for opaque rendering. Image alpha is available in the loaded data but is not used for transparency.
 
 To adjust light direction, color, and ambient/diffuse intensity, edit `UpdateLightBuffer()` in [DX12Renderer.cpp](Renderer/DX12Renderer.cpp).
 

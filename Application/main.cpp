@@ -64,7 +64,7 @@ int WINAPI wWinMain(
     int nCmdShow)
 {
     try {
-    // 1. 定义窗口类
+    // 1. define windows class
     const wchar_t CLASS_NAME[] = L"DX12WindowClass";
 
     WNDCLASS wc = {};
@@ -77,12 +77,12 @@ int WINAPI wWinMain(
 
 
 
-    // 2. 注册窗口类
+    // 2. register windows
     if (RegisterClass(&wc) == 0) {
         throw std::system_error(GetLastError(), std::system_category(), "RegisterClass failed");
     }
 
-    // 3. 创建窗口
+    // 3. create windows
     HWND hwnd = CreateWindowEx(
         0,                          // Extended style
         CLASS_NAME,                 // Window class

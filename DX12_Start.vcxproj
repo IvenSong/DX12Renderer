@@ -136,6 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application\camera.cpp" />
+    <ClCompile Include="Application\image.cpp" />
     <ClCompile Include="Application\main.cpp" />
     <ClCompile Include="Renderer\DX12Renderer.cpp" />
     <ClCompile Include="Renderer\shaders.cpp" />
@@ -143,17 +144,27 @@
   <ItemGroup>
     <ClInclude Include="Common\base.h" />
     <ClInclude Include="Application\camera.h" />
+    <ClInclude Include="Application\image.h" />
     <ClInclude Include="Renderer\DX12Renderer.h" />
     <ClInclude Include="Application\inputHandler.h" />
     <ClInclude Include="Application\inputKey.h" />
     <ClInclude Include="Renderer\shaders.h" />
+    <ClInclude Include="ThirdParty\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader\shader.hlsl">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+    <None Include="assets\textures\house_atlas.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <Target Name="CopyRuntimeAssets" AfterTargets="Build">
+    <Copy SourceFiles="$(ProjectDir)shader\shader.hlsl" DestinationFolder="$(OutDir)shader" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(ProjectDir)assets\textures\house_atlas.png" DestinationFolder="$(OutDir)assets\textures" SkipUnchangedFiles="true" />
+  </Target>
 </Project>
