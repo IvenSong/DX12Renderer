@@ -86,7 +86,7 @@ int WINAPI wWinMain(
     HWND hwnd = CreateWindowEx(
         0,                          // Extended style
         CLASS_NAME,                 // Window class
-        L"DX12 Learning",           // Window title
+        L"DX12Renderer",            // Window title
         WS_OVERLAPPEDWINDOW,        // Window style
 
         CW_USEDEFAULT,
