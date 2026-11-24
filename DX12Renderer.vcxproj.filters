@@ -24,7 +24,19 @@
     <ClCompile Include="Application\main.cpp">
       <Filter>Application</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\DX12Init.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\DX12Pipeline.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="Renderer\DX12Renderer.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\DX12Resources.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\DX12Utils.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\shaders.cpp">

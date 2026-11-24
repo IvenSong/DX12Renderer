@@ -53,6 +53,7 @@ struct Vertex
 struct TransformConstants {
     DirectX::XMFLOAT4X4 MVP;
     DirectX::XMFLOAT4X4 normalMatrix;
+    DirectX::XMFLOAT4X4 lightMVP;
 };
 
 struct LightConstant { // 32 bytes
@@ -62,3 +63,4 @@ struct LightConstant { // 32 bytes
     DirectX::XMFLOAT3 lightColor;
     float ambientIntensity;
 };
+

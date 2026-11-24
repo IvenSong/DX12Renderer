@@ -44,5 +44,6 @@ ARM64/
 *.log
 *.tmp
 *.bak
+*.rdc
 Thumbs.db
 Desktop.ini

@@ -140,7 +140,11 @@
     <ClCompile Include="Application\camera.cpp" />
     <ClCompile Include="Application\image.cpp" />
     <ClCompile Include="Application\main.cpp" />
+    <ClCompile Include="Renderer\DX12Init.cpp" />
+    <ClCompile Include="Renderer\DX12Pipeline.cpp" />
     <ClCompile Include="Renderer\DX12Renderer.cpp" />
+    <ClCompile Include="Renderer\DX12Resources.cpp" />
+    <ClCompile Include="Renderer\DX12Utils.cpp" />
     <ClCompile Include="Renderer\shaders.cpp" />
   </ItemGroup>
   <ItemGroup>

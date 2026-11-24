@@ -29,6 +29,8 @@ private:
 	// Pipeline preparation: sampler belongs to the root signature; input layout belongs to the PSO.
 	void createRootSignature();
 	void compileShaders();
+	// Shared fixed-function defaults; each pass supplies its shaders, bindings, and formats.
+	static D3D12_GRAPHICS_PIPELINE_STATE_DESC createDefaultPSODesc() noexcept;
 	void createPipelineState();
 
 	// Editable RGBA8 data is separate from resource creation and the fixed upload procedure.
@@ -55,6 +57,13 @@ private:
 	void waitForGPU();
 	void ThrowIfFailed(HRESULT hr, const char* operation);
 
+	// Main Pass
+	void renderMainPass(UINT frameIndex);
+
+	// Shadow Pass
+	void renderShadowPass();
+	void createShadowPass();
+
 private:
 	// Device and adapter.
 	Microsoft::WRL::ComPtr<IDXGIFactory6> factory;
@@ -78,6 +87,19 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthBuffer;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap;
 
+	// Shadow Map depth Buffer
+	Microsoft::WRL::ComPtr<ID3D12Resource> mShadowMap;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> mShadowMapPipelineState;
+
+	// Root parameter indices matching createRootSignature().
+	enum RootParameterSlot : UINT {
+		RootSlotTransformCBV = 0, // b0
+		RootSlotTextureTable = 1, // t0
+		RootSlotLightCBV     = 2, // b1
+		RootSlotShadowMap    = 3, // t1
+		RootSlotCount
+	};
+
 	// Pipeline and shader compilation.
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState;
@@ -90,6 +112,9 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView = {};
+	static constexpr UINT CubeIndexCount = 36;
+	static constexpr UINT GroundStartIndex = 36;
+	static constexpr UINT GroundIndexCount = 6;
 	Microsoft::WRL::ComPtr<ID3D12Resource> mConstantBuffer;
 	uint8_t* mConstantBufferMapped = nullptr;
 
@@ -111,4 +136,9 @@ private:
 	// Lighting System
 	Microsoft::WRL::ComPtr<ID3D12Resource> mLightBuffer;
 	uint8_t* mLightBufferMapped = nullptr;  // keep the address for CPU to write in.
+
+
+	// Shadow Map
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mShadowMapDsvHeap;
+	Microsoft::WRL::ComPtr<ID3DBlob> mShadowVertexShader;
 };
